@@ -1,9 +1,8 @@
 package biz.k11i.xgboost.gbm;
 
+import java.io.IOException;
 import biz.k11i.xgboost.util.FVec;
 import biz.k11i.xgboost.util.ModelReader;
-
-import java.io.IOException;
 
 /**
  * Linear booster implementation
@@ -18,7 +17,7 @@ public class GBLinear extends GBBase {
     }
 
     @Override
-    public void loadModel(ModelReader reader, boolean ignored_with_pbuffer) throws IOException {
+    public void loadModel(ModelReader reader) throws IOException {
         mparam = new ModelParam(reader);
         reader.readInt(); // read padding
         weights = reader.readFloatArray((mparam.num_feature + 1) * mparam.num_output_group);

@@ -1,17 +1,29 @@
 package biz.k11i.xgboost;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Serializable;
 import biz.k11i.xgboost.gbm.GradBooster;
 import biz.k11i.xgboost.learner.ObjFunction;
 import biz.k11i.xgboost.util.FVec;
 import biz.k11i.xgboost.util.ModelReader;
 
-import java.io.IOException;
-import java.io.InputStream;
-
 /**
  * Predicts using the Xgboost model.
  */
-public class Predictor {
+public class Predictor implements Serializable {
+    public static void main(String[] args) throws IOException {
+        Predictor predictor = new Predictor(new FileInputStream("/Users/lisendong/Desktop/kuaishou/personal_rec/src/main/resources/0050.model"));
+        double[] denseArray = {0, 0, 32, 0, 0, 16, -8, 0, 0, 0};
+        FVec fVecDense = FVec.Transformer.fromArray(
+                denseArray,
+                true /* treat zero element as N/A */);
+        double[] prediction = predictor.predict(fVecDense);
+        for (int i = 0; i < prediction.length; i++) {
+            System.out.println(prediction[i]);
+        }
+    }
     private ModelParam mparam;
     private String name_obj;
     private String name_gbm;
@@ -28,12 +40,13 @@ public class Predictor {
         ModelReader reader = new ModelReader(in);
 
         mparam = new ModelParam(reader);
+        System.out.println(mparam);
         name_obj = reader.readString();
         name_gbm = reader.readString();
 
         initObjGbm();
 
-        gbm.loadModel(reader, mparam.saved_with_pbuffer != 0);
+        gbm.loadModel(reader);
     }
 
     void initObjGbm() {
@@ -81,6 +94,7 @@ public class Predictor {
 
     double[] predictRaw(FVec feat, int ntree_limit) {
         double[] preds = gbm.predict(feat, ntree_limit);
+        // add base score to every predict result
         for (int i = 0; i < preds.length; i++) {
             preds[i] += mparam.base_score;
         }
@@ -169,8 +183,10 @@ public class Predictor {
         final /* unsigned */ int num_feature;
         /* \brief number of class, if it is multi-class classification  */
         final int num_class;
-        /*! \brief whether the model itself is saved with pbuffer */
-        final int saved_with_pbuffer;
+        /*! \deprecated! brief whether the model itself is saved with pbuffer */
+        // final int saved_with_pbuffer;
+        /*! \brief Model contain additional properties */
+        final int contain_extra_attrs;
         /*! \brief reserved field */
         final int[] reserved;
 
@@ -178,8 +194,13 @@ public class Predictor {
             base_score = reader.readFloat();
             num_feature = reader.readUnsignedInt();
             num_class = reader.readInt();
-            saved_with_pbuffer = reader.readInt();
+            contain_extra_attrs = reader.readInt();
             reserved = reader.readIntArray(30);
+        }
+
+        @Override
+        public String toString() {
+            return "base_score=" + base_score + ",num_feature=" + num_feature + ",num_class=" + num_class + ",contain_extra_attrs=" + contain_extra_attrs;
         }
     }
 }

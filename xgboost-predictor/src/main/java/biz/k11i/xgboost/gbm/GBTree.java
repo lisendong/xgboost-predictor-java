@@ -1,10 +1,9 @@
 package biz.k11i.xgboost.gbm;
 
+import java.io.IOException;
 import biz.k11i.xgboost.tree.RegTree;
 import biz.k11i.xgboost.util.FVec;
 import biz.k11i.xgboost.util.ModelReader;
-
-import java.io.IOException;
 
 /**
  * Gradient boosted tree implementation.
@@ -21,8 +20,10 @@ public class GBTree extends GBBase {
     }
 
     @Override
-    public void loadModel(ModelReader reader, boolean with_pbuffer) throws IOException {
+    public void loadModel(ModelReader reader) throws IOException {
+        // load gbtree model
         mparam = new ModelParam(reader);
+        System.out.println(mparam);
 
         trees = new RegTree[mparam.num_trees];
         for (int i = 0; i < mparam.num_trees; i++) {
@@ -32,11 +33,6 @@ public class GBTree extends GBBase {
 
         if (mparam.num_trees != 0) {
             tree_info = reader.readIntArray(mparam.num_trees);
-        }
-
-        if (mparam.num_pbuffer != 0 && with_pbuffer) {
-            reader.skip(4 * mparam.predBufferSize());
-            reader.skip(4 * mparam.predBufferSize());
         }
 
         _groupTrees = new RegTree[mparam.num_output_group][];
@@ -62,6 +58,7 @@ public class GBTree extends GBBase {
     @Override
     public double[] predict(FVec feat, int ntree_limit) {
         double[] preds = new double[mparam.num_output_group];
+        // every group ?
         for (int gid = 0; gid < mparam.num_output_group; gid++) {
             preds[gid] = pred(feat, gid, 0, ntree_limit);
         }
@@ -115,6 +112,7 @@ public class GBTree extends GBBase {
         /*! \brief number of features to be used by trees */
         final int num_feature;
         /*! \brief size of predicton buffer allocated used for buffering */
+        final long num_pbuffer_deprecated;
         final long num_pbuffer;
         /*!
          * \brief how many output group a single instance can produce
@@ -131,16 +129,25 @@ public class GBTree extends GBBase {
             num_trees = reader.readInt();
             num_roots = reader.readInt();
             num_feature = reader.readInt();
+            /*! \brief pad this space, for backward compatiblity reason.*/
             reader.readInt(); // read padding
-            num_pbuffer = reader.readLong();
+            num_pbuffer_deprecated = reader.readLong();
+            num_pbuffer = 0;
             num_output_group = reader.readInt();
             size_leaf_vector = reader.readInt();
-            reserved = reader.readIntArray(31);
-            reader.readInt(); // read padding
+            reserved = reader.readIntArray(32);
+            // extend reserved vector from 31 to 32, then delete the follow padding
+            // reader.readInt(); // read padding
         }
 
         long predBufferSize() {
             return num_output_group * num_pbuffer * (size_leaf_vector + 1);
+        }
+
+        @Override
+        public String toString() {
+            return "num_trees=" + num_trees + ",num_roots=" + num_roots + ",num_feature"
+                    + num_feature + ",num_output_group=" + num_output_group + ",size_leaf_vector=" + size_leaf_vector;
         }
     }
 

@@ -1,15 +1,14 @@
 package biz.k11i.xgboost.learner;
 
-import net.jafama.FastMath;
-
 import java.util.HashMap;
 import java.util.Map;
+import net.jafama.FastMath;
 
 /**
  * Objective function implementations.
  */
 public class ObjFunction {
-    private static final Map<String, ObjFunction> FUNCTIONS = new HashMap<>();
+    private static final Map<String, ObjFunction> FUNCTIONS = new HashMap<String, ObjFunction>();
 
     static {
         register("binary:logistic", new RegLossObjLogistic());

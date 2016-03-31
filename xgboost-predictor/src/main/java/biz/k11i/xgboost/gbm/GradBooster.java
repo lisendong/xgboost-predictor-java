@@ -1,9 +1,8 @@
 package biz.k11i.xgboost.gbm;
 
+import java.io.IOException;
 import biz.k11i.xgboost.util.FVec;
 import biz.k11i.xgboost.util.ModelReader;
-
-import java.io.IOException;
 
 /**
  * Interface of gradient boosting model.
@@ -33,10 +32,9 @@ public interface GradBooster {
      * Loads model from stream.
      *
      * @param reader       input stream
-     * @param with_pbuffer whether the incoming data contains pbuffer
      * @throws IOException If an I/O error occurs
      */
-    void loadModel(ModelReader reader, boolean with_pbuffer) throws IOException;
+    void loadModel(ModelReader reader) throws IOException;
 
     /**
      * Generates predictions for given feature vector.

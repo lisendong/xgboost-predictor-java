@@ -21,7 +21,9 @@ public class ModelReader implements Closeable {
     }
 
     public ModelReader(InputStream in) throws IOException {
+        /* 不需要再区分是什么模型了!
         byte[] type = new byte[4];
+        in.reset();
         if (in.read(type) < 4) {
             throw new IOException("Cannot read format type (shortage)");
         }
@@ -31,6 +33,7 @@ public class ModelReader implements Closeable {
             // TODO support bs64
             throw new IOException("Unsupported format type: " + typeString);
         }
+        */
 
         stream = new DataInputStream(in);
     }
